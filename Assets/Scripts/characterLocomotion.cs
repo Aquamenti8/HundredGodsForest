@@ -13,23 +13,33 @@ public class characterLocomotion : MonoBehaviour
     public float turnSmoothTime = 0.1f;
     float turnSmoothVelocity;
 
+    //GRAVITY
+    Vector3 velocity;
+    public float gravity = -9.81f;
+    public Transform groundCheck;
+    public float groundDistance = 0.4f;
+    public LayerMask groundMask;
+    bool isGrounded;
+
     //Spectral Force
     public GameObject aimSphere;
     float spectralForce;
-    [SerializeField] private LayerMask mask;
+    [SerializeField] private LayerMask aimMask;
     public float maxDistance;
     public float forceMaxSpeed;
+    bool isAiming;
 
-    // Start is called before the first frame update
+
     void Start()
     {
         animator = GetComponent<Animator>();
         controller = GetComponent<CharacterController>();
     }
 
-    // Update is called once per frame
     void Update()
     {
+
+        Cursor.lockState = CursorLockMode.Locked;
         GetInput();
         HandleMovement();
         Aim();
@@ -47,7 +57,7 @@ public class characterLocomotion : MonoBehaviour
     }
     void HandleMovement()
     {
-        //If there is some movement
+        //MOVEMENT
         if(currentMovement.magnitude >= 0.1f)
         {
             animator.SetBool("isWalking", true);
@@ -58,6 +68,16 @@ public class characterLocomotion : MonoBehaviour
 
         }
         else animator.SetBool("isWalking", false);
+
+        // GRAVITY
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+
+        if (isGrounded && velocity.y < 0)
+        {
+            velocity.y = -1f;
+        }
+        velocity.y += gravity * Time.deltaTime;
+        controller.Move(velocity * Time.deltaTime);
     }
     void Aim()
     {
@@ -65,12 +85,17 @@ public class characterLocomotion : MonoBehaviour
         {
             var ray = Camera.main.ScreenPointToRay(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f));
             RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, maxDistance, mask))
+            if (Physics.Raycast(ray, out hit, maxDistance, aimMask))
             {
                 aimSphere.transform.position = hit.point;
+                isAiming = true;
+            }
+            else
+            {
+                isAiming = false;
             }
         }
-        else
+        else if(isAiming)
         {
             SpectralForce();
         }
@@ -79,12 +104,19 @@ public class characterLocomotion : MonoBehaviour
     {
         if(spectralForce != 0)
         {
+            Vector3 characterCenter = transform.position + controller.center;
+            Vector3 aimCenter = aimSphere.transform.position;
             if(spectralForce == 1)  // PULL
             {
-                //move in aimSphereDir
-                Vector3 aimDir = ( aimSphere.transform.position- transform.position).normalized;
-                //controller.Move(aimDir*forceMaxSpeed*Time.deltaTime);
-                //transform.Translate(aimDir * forceMaxSpeed * Time.deltaTime);
+                Vector3 aimDir = ( aimCenter - characterCenter).normalized;
+                controller.Move(aimDir*forceMaxSpeed*Time.deltaTime);
+
+            }
+            if (spectralForce == -1)  // PUSH
+            {
+                Vector3 aimDir = (characterCenter - aimCenter).normalized;
+                controller.Move(aimDir * forceMaxSpeed * Time.deltaTime);
+
             }
         }
     }
