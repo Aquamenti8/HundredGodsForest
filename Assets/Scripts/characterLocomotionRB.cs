@@ -13,21 +13,15 @@ public class characterLocomotionRB : MonoBehaviour
     public float turnSmoothTime = 0.1f;
     float turnSmoothVelocity;
 
-    //GRAVITY
-    Vector3 velocity;
-    public float gravity = -9.81f;
-    public Transform groundCheck;
-    public float groundDistance = 0.4f;
-    public LayerMask groundMask;
-    bool isGrounded;
 
     //Spectral Force
     public GameObject aimSphere;
     float spectralForce;
     [SerializeField] private LayerMask aimMask;
     public float maxDistance;
-    public float forceMaxSpeed;
+    public float forcePower;
     bool isAiming;
+    RaycastHit hitAiming;
 
 
     void Start()
@@ -74,13 +68,14 @@ public class characterLocomotionRB : MonoBehaviour
     {
         if (spectralForce == 0)
         {
-            if (!rb.useGravity) rb.useGravity =true;
+            //if (!rb.useGravity) rb.useGravity =true;
             var ray = Camera.main.ScreenPointToRay(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f));
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit, maxDistance, aimMask))
             {
                 aimSphere.transform.position = hit.point;
                 isAiming = true;
+                hitAiming = hit;
             }
             else
             {
@@ -94,21 +89,40 @@ public class characterLocomotionRB : MonoBehaviour
     }
     void SpectralForce()
     {
-        rb.useGravity = false;
+        //rb.useGravity = false;
         Vector3 characterCenter = transform.position + rb.centerOfMass;
-        Vector3 aimCenter = aimSphere.transform.position;
-        if (spectralForce == 1)  // PULL
-        {
-            Vector3 aimDir = (aimCenter - characterCenter).normalized * forceMaxSpeed * Time.deltaTime;
-            rb.MovePosition(transform.position + aimDir);
+        Vector3 aimCenter = hitAiming.point;
+        // IMMOBILE OBJECT
+        if (hitAiming.transform.gameObject.GetComponent<Rigidbody>() == null) {
+            if (spectralForce == 1)  // PULL
+            {
+                Vector3 aimDir = (aimCenter - characterCenter).normalized * forcePower * Time.deltaTime;
+                rb.MovePosition(transform.position + aimDir);
+
+            }
+            if (spectralForce == -1)  // PUSH
+            {
+                Vector3 aimDir = (characterCenter - aimCenter).normalized * forcePower * Time.deltaTime;
+                rb.MovePosition(transform.position + aimDir);
+
+            }
+        }
+        
+        //MOBILE OBJECT
+        else{
+            Rigidbody colliderRb = hitAiming.transform.gameObject.GetComponent<Rigidbody>();
+            Vector3 directionCol = (hitAiming.point - (transform.position + rb.centerOfMass)).normalized;
+            Vector3 directionChara = (hitAiming.point - rb.centerOfMass- transform.position).normalized;
+            float colliderMass = colliderRb.mass;
+
+            Debug.Log("center of mass" + rb.centerOfMass);
+
+            colliderRb.AddForce(directionCol * forcePower * spectralForce*-1);
+            rb.MovePosition(transform.position + directionChara * spectralForce * Mathf.Min(colliderMass, forcePower)*Time.deltaTime);
+            
 
         }
-        if (spectralForce == -1)  // PUSH
-        {
-            Vector3 aimDir = (characterCenter - aimCenter).normalized * forceMaxSpeed * Time.deltaTime;
-            rb.MovePosition(transform.position + aimDir);
-
-        }
+        
     }
         
         
