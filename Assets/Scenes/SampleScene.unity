@@ -740,7 +740,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 589426455}
-  m_LocalRotation: {x: 0.045932543, y: 0.08970469, z: -0.0041414853, w: 0.9949001}
+  m_LocalRotation: {x: 0.04593234, y: 0.08975148, z: -0.0041436446, w: 0.9948959}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -956,8 +956,8 @@ MonoBehaviour:
   m_LookaheadTime: 0
   m_LookaheadSmoothing: 0
   m_LookaheadIgnoreY: 0
-  m_HorizontalDamping: 0
-  m_VerticalDamping: 0
+  m_HorizontalDamping: 1
+  m_VerticalDamping: 1
   m_ScreenX: 0.39
   m_ScreenY: 0.5
   m_DeadZoneWidth: 0
@@ -1099,7 +1099,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 800197607}
-  m_LocalRotation: {x: 0.103558466, y: 0.08303717, z: -0.008676307, w: 0.9911131}
+  m_LocalRotation: {x: 0.1035581, y: 0.083080076, z: -0.008680792, w: 0.99110955}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -1232,8 +1232,8 @@ MonoBehaviour:
   m_LookaheadTime: 0
   m_LookaheadSmoothing: 0
   m_LookaheadIgnoreY: 0
-  m_HorizontalDamping: 0
-  m_VerticalDamping: 0
+  m_HorizontalDamping: 1
+  m_VerticalDamping: 1
   m_ScreenX: 0.38
   m_ScreenY: 0.66
   m_DeadZoneWidth: 0
@@ -1500,7 +1500,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 955239646}
-  m_LocalRotation: {x: 0.07849218, y: 0.045009796, z: -0.0035474906, w: 0.9958918}
+  m_LocalRotation: {x: 0.078492105, y: 0.045029707, z: -0.0035490596, w: 0.9958909}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -1585,7 +1585,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.078492165, y: 0.045009796, z: -0.00354749, w: 0.99589187}
+  m_LocalRotation: {x: 0.0784921, y: 0.045029707, z: -0.0035490599, w: 0.9958909}
   m_LocalPosition: {x: 0.01434208, y: 4.0719204, z: -3.7274494}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -2066,8 +2066,8 @@ MonoBehaviour:
   m_LookaheadTime: 0
   m_LookaheadSmoothing: 0
   m_LookaheadIgnoreY: 0
-  m_HorizontalDamping: 0
-  m_VerticalDamping: 0
+  m_HorizontalDamping: 1
+  m_VerticalDamping: 1
   m_ScreenX: 0.45
   m_ScreenY: 0.57
   m_DeadZoneWidth: 0

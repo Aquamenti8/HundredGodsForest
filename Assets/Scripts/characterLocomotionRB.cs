@@ -5,7 +5,7 @@ using UnityEngine;
 public class characterLocomotionRB : MonoBehaviour
 {
     //Third Person Basic Move
-    Vector3 currentMovement;
+    Vector3 inputMovement;
     public Transform cam;
     Animator animator;
     Rigidbody rb;
@@ -13,6 +13,12 @@ public class characterLocomotionRB : MonoBehaviour
     public float turnSmoothTime = 0.1f;
     float turnSmoothVelocity;
 
+    //ANIMATION
+    public float animSmoothTime = 0.1f;
+    Vector3 animSmoothVelocity;
+    Vector3 animMovement;
+    bool isResting;
+    bool isHanging;
 
     //Spectral Force
     public GameObject aimSphere;
@@ -37,6 +43,7 @@ public class characterLocomotionRB : MonoBehaviour
         GetInput();
         HandleMovement();
         Aim();
+
     }
 
     void GetInput()
@@ -44,7 +51,7 @@ public class characterLocomotionRB : MonoBehaviour
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
-        currentMovement = new Vector3(horizontal,0, vertical).normalized;
+        inputMovement = new Vector3(horizontal,0, vertical).normalized;
 
 
         spectralForce = Input.GetAxisRaw("Fire1");
@@ -52,17 +59,25 @@ public class characterLocomotionRB : MonoBehaviour
     void HandleMovement()
     {
         //MOVEMENT
-        if(currentMovement.magnitude >= 0.1f)
+        if (inputMovement.magnitude >= 0.1f)
         {
             animator.SetBool("isWalking", true);
+            float targetAngle = cam.eulerAngles.y;
 
-            float targetAngle = Mathf.Atan2(currentMovement.x, currentMovement.z)*Mathf.Rad2Deg + cam.eulerAngles.y;
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
         }
-        else animator.SetBool("isWalking", false);
+        else
+        {
+            animator.SetBool("isWalking", false);
+            inputMovement = new Vector3(0, 0, 0);
+        }
 
+        // ANIMATION
+        animMovement = Vector3.SmoothDamp(animMovement, inputMovement, ref animSmoothVelocity, animSmoothTime);
+        animator.SetFloat("Side", animMovement.x);
+        animator.SetFloat("FrontBack", animMovement.z);
     }
     void Aim()
     {
