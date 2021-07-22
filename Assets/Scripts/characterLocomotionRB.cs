@@ -46,6 +46,8 @@ public class characterLocomotionRB : MonoBehaviour
     public float aimOffsetSmooth;
     public float aimOffsetMaxDegree = 20f;
 
+    public AnimationCurve forceJumpVelocityCurve;
+
     // DEBUG
     public Text debug1;
     public Text debug2;
