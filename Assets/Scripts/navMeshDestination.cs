@@ -20,6 +20,11 @@ public class navMeshDestination : MonoBehaviour
 
     public LayerMask groundLayer;
 
+    //Chasing
+    public bool isChasingPlayer;
+    GameObject prey;
+    Vector3 lastPreyLocation;
+
     //Debug
     public Text debug1;
     public Text debug2;
@@ -29,17 +34,23 @@ public class navMeshDestination : MonoBehaviour
     float turnSmoothVelocity;
     float turnSmoothTime = 0.1f;
 
+    // AI sensor
+    [HideInInspector] public AiSensor sensor;
+
+
     void Start()
     {
         animator = GetComponent<Animator>();
+        sensor = GetComponent<AiSensor>();
     }
 
 
     void Update()
     {
         debug1.text = "Target point : " + targetPoint;
-        debug2.text = "timer = " + timer;
-
+        debug2.text = "prey " + prey;
+        if (isPatrolling) debug3.text = "IsPatrolling";
+        else if(isChasingPlayer) debug3.text = "IsChasing";
         if (moveOnClick)
         {
             if (Input.GetMouseButtonDown(0))
@@ -69,7 +80,49 @@ public class navMeshDestination : MonoBehaviour
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
             //transform.rotation = Quaternion.AngleAxis(angle,);
         }
+
+        // CHASE
+        if (prey == null)
+        {
+            prey = FindPrey();
+            isPatrolling = true;
+            isChasingPlayer = false;
+        }
+        else
+        {
+            ChasePrey();
+            isPatrolling = false;
+            isChasingPlayer = true;
+        }
         
+    }
+    GameObject FindPrey()
+    {
+        if (sensor.Objects.Count > 0)
+        {
+            return sensor.Objects[0];
+        }
+        return null;
+    }
+    private void ChasePrey()
+    {
+        NavMeshHit navMeshHit;
+        if (NavMesh.SamplePosition(prey.transform.position, out navMeshHit, 2, 1))
+        {
+            targetPoint = navMeshHit.position;
+            lastPreyLocation = targetPoint;
+            TargetAgent.SetDestination(navMeshHit.position);
+            onDestination = false;
+        }
+        if (!sensor.Objects.Contains(prey))
+        {
+            prey = null;
+            isChasingPlayer = false;
+            isPatrolling = true;
+            timer = 3f;
+            onDestination = false;
+            targetPoint = lastPreyLocation;
+        }
     }
     private void Patrolling()
     {
