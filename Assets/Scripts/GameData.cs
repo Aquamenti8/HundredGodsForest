@@ -10,6 +10,7 @@ public static class GameData
 
 	public static float BaseTerrainHeight = 60f; // minimum height of terrain.
 	public static float TerrainHeightRange = 10f; // The max height (above BaseterrainHeight) our terrain can be
+	public static int TerrainCenterOffset;
 	public static float GetTerrainHeight(int x, int z)
     {
 		return (float)TerrainHeightRange * Mathf.PerlinNoise((float)x / 16f * 1.5f + 0.001f, (float)z / 16f * 1.5f + 0.001f) + BaseTerrainHeight;
@@ -293,4 +294,5 @@ public static class GameData
 		{0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 		{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
 	};
+
 }

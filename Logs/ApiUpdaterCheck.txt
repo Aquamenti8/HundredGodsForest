@@ -118,3 +118,63 @@ C# parse time         : 297ms
 candidates check time : 48ms
 console write time    : 0ms
 
+[api-updater (non-obsolete-error-filter)] 23/07/2021 19:24:39 : Starting H:/Users/Lea/Documents/UnityEditor/2020.3.13f1/Editor/Data/Tools/ScriptUpdater/APIUpdater.NonObsoleteApiUpdaterDetector.exe
+[api-updater (non-obsolete-error-filter)] 
+----------------------------------
+jit/startup time      : 650,2207ms
+moved types parse time: 79ms
+candidates parse time : 2ms
+C# parse time         : 310ms
+candidates check time : 93ms
+console write time    : 0ms
+
+[api-updater (non-obsolete-error-filter)] 23/07/2021 19:24:42 : Starting H:/Users/Lea/Documents/UnityEditor/2020.3.13f1/Editor/Data/Tools/ScriptUpdater/APIUpdater.NonObsoleteApiUpdaterDetector.exe
+[api-updater (non-obsolete-error-filter)] 
+----------------------------------
+jit/startup time      : 241,8137ms
+moved types parse time: 87ms
+candidates parse time : 2ms
+C# parse time         : 333ms
+candidates check time : 81ms
+console write time    : 0ms
+
+[api-updater (non-obsolete-error-filter)] 23/07/2021 19:26:24 : Starting H:/Users/Lea/Documents/UnityEditor/2020.3.13f1/Editor/Data/Tools/ScriptUpdater/APIUpdater.NonObsoleteApiUpdaterDetector.exe
+[api-updater (non-obsolete-error-filter)] 
+----------------------------------
+jit/startup time      : 129,0017ms
+moved types parse time: 79ms
+candidates parse time : 2ms
+C# parse time         : 325ms
+candidates check time : 71ms
+console write time    : 0ms
+
+[api-updater (non-obsolete-error-filter)] 23/07/2021 19:27:04 : Starting H:/Users/Lea/Documents/UnityEditor/2020.3.13f1/Editor/Data/Tools/ScriptUpdater/APIUpdater.NonObsoleteApiUpdaterDetector.exe
+[api-updater (non-obsolete-error-filter)] 
+----------------------------------
+jit/startup time      : 107,0022ms
+moved types parse time: 81ms
+candidates parse time : 2ms
+C# parse time         : 317ms
+candidates check time : 73ms
+console write time    : 0ms
+
+[api-updater (non-obsolete-error-filter)] 23/07/2021 19:27:13 : Starting H:/Users/Lea/Documents/UnityEditor/2020.3.13f1/Editor/Data/Tools/ScriptUpdater/APIUpdater.NonObsoleteApiUpdaterDetector.exe
+[api-updater (non-obsolete-error-filter)] 
+----------------------------------
+jit/startup time      : 123,0015ms
+moved types parse time: 98ms
+candidates parse time : 2ms
+C# parse time         : 323ms
+candidates check time : 71ms
+console write time    : 0ms
+
+[api-updater (non-obsolete-error-filter)] 23/07/2021 19:27:25 : Starting H:/Users/Lea/Documents/UnityEditor/2020.3.13f1/Editor/Data/Tools/ScriptUpdater/APIUpdater.NonObsoleteApiUpdaterDetector.exe
+[api-updater (non-obsolete-error-filter)] 
+----------------------------------
+jit/startup time      : 120,0023ms
+moved types parse time: 91ms
+candidates parse time : 2ms
+C# parse time         : 331ms
+candidates check time : 70ms
+console write time    : 0ms
+

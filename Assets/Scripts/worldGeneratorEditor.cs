@@ -15,5 +15,13 @@ public class worldGeneratorEditor : Editor
         {
             worldGen.Generate();
         }
+        if (GUILayout.Button("Clear World"))
+        {
+            worldGen.ClearWorld();
+        }
+        if (GUILayout.Button("Save Current Map !"))
+        {
+            worldGen.saveCurrentMap();
+        }
     }
 }

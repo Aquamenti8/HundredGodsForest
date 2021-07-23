@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[ExecuteInEditMode]
 public class Chunk
 {
 
@@ -12,7 +13,7 @@ public class Chunk
 
     Vector3Int chunkPosition;
 
-    float[,,] terrainMap;
+    public float[,,] terrainMap;
 
     List<Vector3> vertices = new List<Vector3>();
     List<int> triangles = new List<int>();
@@ -79,7 +80,7 @@ public class Chunk
                     float thisHeight;
 
                     // Get a terrain height using regular old Perlin noise.
-                    thisHeight = GameData.GetTerrainHeight(x + chunkPosition.x, z + chunkPosition.z);
+                    thisHeight = GameData.GetTerrainHeight(x + chunkPosition.x + GameData.TerrainCenterOffset, z + chunkPosition.z + GameData.TerrainCenterOffset);
 
                     // Set the value of this point in the terrainMap.
                     terrainMap[x, y, z] = (float)y - thisHeight;

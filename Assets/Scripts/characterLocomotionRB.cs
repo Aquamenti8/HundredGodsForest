@@ -278,8 +278,6 @@ public class characterLocomotionRB : MonoBehaviour
 
                 animator.SetBool("isGliding", false);
             }
-            debug1.text = "Force On Chara " + forceOnChara;
-            debug2.text = "Force On Coll " + forceOnCollider;
         }
         else
         {
