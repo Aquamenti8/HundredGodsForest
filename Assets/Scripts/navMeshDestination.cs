@@ -37,6 +37,8 @@ public class navMeshDestination : MonoBehaviour
     // AI sensor
     [HideInInspector] public AiSensor sensor;
 
+    float distanceToAttack = 1f;
+
 
     void Start()
     {
@@ -47,10 +49,7 @@ public class navMeshDestination : MonoBehaviour
 
     void Update()
     {
-        debug1.text = "Target point : " + targetPoint;
-        debug2.text = "prey " + prey;
-        if (isPatrolling) debug3.text = "IsPatrolling";
-        else if(isChasingPlayer) debug3.text = "IsChasing";
+
         if (moveOnClick)
         {
             if (Input.GetMouseButtonDown(0))
@@ -93,6 +92,7 @@ public class navMeshDestination : MonoBehaviour
             ChasePrey();
             isPatrolling = false;
             isChasingPlayer = true;
+            
         }
         
     }
@@ -113,6 +113,12 @@ public class navMeshDestination : MonoBehaviour
             lastPreyLocation = targetPoint;
             TargetAgent.SetDestination(navMeshHit.position);
             onDestination = false;
+
+            if ((prey.transform.position - transform.position).magnitude < distanceToAttack)
+            {
+                animator.SetTrigger("Attack");
+                Debug.Log("ATTACK");
+            }
         }
         if (!sensor.Objects.Contains(prey))
         {
