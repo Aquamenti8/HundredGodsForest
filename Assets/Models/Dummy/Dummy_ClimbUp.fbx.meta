@@ -1,11 +1,11 @@
 fileFormatVersion: 2
-guid: 776d2cbd80e3a8d4fbe7d2ee4a79dfe9
+guid: 492f2a765fa5fb142b5b798beebfcb6b
 ModelImporter:
   serializedVersion: 20200
   internalIDToNameTable:
   - first:
       74: 1827226128182048838
-    second: Run
+    second: ClimbUp
   externalObjects: {}
   materials:
     materialImportMode: 2
@@ -20,19 +20,18 @@ ModelImporter:
     motionNodeName: 
     rigImportErrors: 
     rigImportWarnings: "Copied Avatar Rig Configuration mis-match. Bone length in
-      copied configuration does not match position in animation file:\n\t'sk_thumb1_L'
-      : position error = 13.316579 mm\n\t'sk_thumb1_R' : position error = 11.466022
-      mm\nCopied Avatar Rig Configuration mis-match. Inbetween bone rotation in copied
-      configuration does not match rotation in animation file:\n\t'sk_spine1' : rotation
-      error = 2.730520 deg\n\t'sk_spine5' : rotation error = 6.195990 deg\n"
+      copied configuration does not match position in animation file:\n\t'sk_spine4'
+      : position error = 1.085286 mm\n\t'sk_elbow_L' : position error = 5.501052
+      mm\n\t'sk_thumb1_L' : position error = 13.316579 mm\n\t'sk_elbow_R' : position
+      error = 6.397966 mm\n\t'sk_thumb1_R' : position error = 11.466022 mm\nCopied
+      Avatar Rig Configuration mis-match. Inbetween bone rotation in copied configuration
+      does not match rotation in animation file:\n\t'sk_spine1' : rotation error
+      = 6.026509 deg\n\t'sk_spine5' : rotation error = 12.778607 deg\n"
     animationImportErrors: 
     animationImportWarnings: "\nClip 'Take 001' has import animation warnings that
       might lower retargeting quality:\nNote: Activate translation DOF on avatar
-      to improve retargeting quality.\n\t'sk_spine1' is inbetween humanoid transforms
-      and has rotation animation that will be discarded.\n\t'sk_spine4' has translation
-      animation that will be discarded.\n\t'sk_spine5' has translation animation
-      that will be discarded.\n\t'sk_spine5' is inbetween humanoid transforms and
-      has rotation animation that will be discarded.\n"
+      to improve retargeting quality.\n\t'sk_elbow_L' has translation animation that
+      will be discarded.\n\t'sk_elbow_R' has translation animation that will be discarded.\n"
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
@@ -46,11 +45,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: Run
+      name: ClimbUp
       takeName: Take 001
       internalID: 0
       firstFrame: 1
-      lastFrame: 18
+      lastFrame: 24
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -61,10 +60,10 @@ ModelImporter:
       loopBlend: 0
       loopBlendOrientation: 1
       loopBlendPositionY: 0
-      loopBlendPositionXZ: 0
+      loopBlendPositionXZ: 1
       keepOriginalOrientation: 1
       keepOriginalPositionY: 1
-      keepOriginalPositionXZ: 0
+      keepOriginalPositionXZ: 1
       heightFromFeet: 0
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
@@ -73,7 +72,7 @@ ModelImporter:
       transformMask: []
       maskType: 3
       maskSource: {instanceID: 0}
-      additiveReferencePoseFrame: 0.96
+      additiveReferencePoseFrame: 1
     isReadable: 0
   meshes:
     lODScreenPercentages: []

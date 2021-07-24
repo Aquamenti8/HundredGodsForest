@@ -27,8 +27,10 @@ public class characterLocomotionRB : MonoBehaviour
     bool isHanging;
     bool isGrounded;
     bool isWall;
+    bool isfalling;
     public Transform groundCheck;
     public Transform wallCheck;
+    public Transform wallUpCheck;
     public float groundDistance = 0.1f;
     public LayerMask groundMask;
 
@@ -112,22 +114,37 @@ public class characterLocomotionRB : MonoBehaviour
         // -------------    HANGING
         else if (isHanging)
         {
-            //aligner le perso a la surface de collision
+            //  aligner le perso a la surface de collision
             Vector3 targetDirection = -hitAiming.normal;
             float targetAngle = Mathf.Atan2(targetDirection.x, targetDirection.z) * Mathf.Rad2Deg;
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+            debug1.text = "input movement"+ inputMovement;
+            if (inputMovement.magnitude >= 0.1f)
+            {
+                animator.SetBool("isHanging", true);
+
+
+            }
+
+            bool isEdge = Physics.CheckSphere(wallUpCheck.position, groundDistance, groundMask);
+            if (!isEdge)
+            {
+                animator.SetTrigger("climbEdge");
+                isHanging = false;
+                animator.SetBool("isHanging", false);
+            }
         }
         // -------------    GRAVITY
-        if (forceSign == 0)
-        {
+        if (forceSign == 0 && !isHanging )
             rb.AddForce(Vector3.up * gravity);
+
+        if(forceSign == 0) 
             animator.applyRootMotion = true;
-        }
         else
-        {
             animator.applyRootMotion = false;
-        }
+
 
         // ----------------------       ANIMATION
         // ----------   Run / walk
@@ -136,21 +153,31 @@ public class characterLocomotionRB : MonoBehaviour
         animator.SetFloat("FrontBack", animMovement.z);
 
         // ---------    Resting
-        if (inputMovement.magnitude <= 0.1f && forceSign == 0) timeSinceInput += Time.deltaTime;
-        else timeSinceInput = 0;
-        if (timeSinceInput > timeBeforeRest) isResting = true;
-        else isResting = false;
+        if (inputMovement.magnitude <= 0.1f && forceSign == 0) 
+            timeSinceInput += Time.deltaTime;
+        else 
+            timeSinceInput = 0;
+
+        if (timeSinceInput > timeBeforeRest) 
+            isResting = true;
+        else 
+            isResting = false;
+
         animator.SetBool("isResting", isResting);
 
         // ---------    Hanging
 
         if (!isGrounded && isWall)
-        {
             isHanging = true;
-        }
-        else isHanging = false;
+        else 
+            isHanging = false;
         animator.SetBool("isHanging", isHanging);
 
+        // ---------- Falling
+        if (!isGrounded && !isHanging) 
+            animator.SetBool("isFalling", true);
+        else
+            animator.SetBool("isFalling", false);
 
 
     }
@@ -290,6 +317,7 @@ public class characterLocomotionRB : MonoBehaviour
 
     void OnAnimatorIK(int layerIndex)
     {
+        /*
         if (animator)
         {
             animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 1f);
@@ -321,6 +349,7 @@ public class characterLocomotionRB : MonoBehaviour
             }
 
         }
+        */
     }
     
         
