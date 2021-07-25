@@ -14,7 +14,7 @@ public class MapData
     {
 		mapData = new float[world.WorldSizeInChunks+1,0, world.WorldSizeInChunks+1][,,];
 
-        float[,,] terrainMap = world.chunks[new Vector3Int(0,0,0)].terrainMap;
+        float[,,] terrainMap = world.chunks[new Vector3Int(8,0,8)].terrainMap;
         mapData[0, 0, 0] = terrainMap;
         Debug.Log("Array bound " + new Vector3(world.WorldSizeInChunks + 1, 0, world.WorldSizeInChunks + 1));
         for (int x = 0; x < world.WorldSizeInChunks; x++)

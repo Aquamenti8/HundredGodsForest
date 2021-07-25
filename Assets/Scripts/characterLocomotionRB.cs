@@ -6,37 +6,49 @@ using UnityEngine.UI;
 public class characterLocomotionRB : MonoBehaviour
 {
     //Third Person Basic Move
-    Vector3 inputMovement;
     public Transform cam;
     Animator animator;
     Rigidbody rb;
     public float speed = 6f;
     public float turnSmoothTime = 0.1f;
-    float turnSmoothVelocity;
+    float turnSmoothVelocityGrounded;
+    float turnSmoothVelicityHanging;
 
     public float gravity = -9.81f;
 
+    //STATES
+    public enum State { OnGround, OnJump, OnAir, OnWall, OnAttractUse}
+    public State state;
+
     //ANIMATION
-    public float animSmoothTime = 0.1f;
+    public float animSmoothTime = 0.05f;
     Vector3 animSmoothVelocity;
     Vector3 animMovement;
-    bool isResting;
     float timeSinceInput;
     public float timeBeforeRest = 2f;
+    float jumpAnimDuration = 0.3f;
 
-    bool isHanging;
     bool isGrounded;
     bool isWall;
-    bool isfalling;
+    bool isWallUp;
+    bool isFalling;
+    bool isHanging;
     public Transform groundCheck;
     public Transform wallCheck;
     public Transform wallUpCheck;
-    public float groundDistance = 0.1f;
+    public float groundDistance = 0.2f;
     public LayerMask groundMask;
+
+    // INPUT
+    Vector3 inputMovement;
+    float inputJump;
+    float inputForce;
+    bool inputForceReleased;
 
     //Spectral Force
     public GameObject aimSphere;
-    float forceSign;
+    public GameObject attractedObject;
+
     public float maxDistance;
     public float forcePower;
     bool isAiming;
@@ -47,6 +59,9 @@ public class characterLocomotionRB : MonoBehaviour
     float aimOffsetY;
     public float aimOffsetSmooth;
     public float aimOffsetMaxDegree = 20f;
+    RaycastHit activeHitAiming;
+    bool nearTarget;
+    float distanceNearTarget = 0.7f;
 
     public AnimationCurve forceJumpVelocityCurve;
 
@@ -63,6 +78,7 @@ public class characterLocomotionRB : MonoBehaviour
     {
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
+        state = State.OnGround;
     }
 
     void Update()
@@ -72,6 +88,9 @@ public class characterLocomotionRB : MonoBehaviour
         GetInput();
         HandleMovement();
         Aim();
+        debug1.text = "Input  " + inputMovement;
+        debug2.text = "IsUpWall " + isWallUp;
+        debug3.text = "IsWall " + isWall;
 
     }
 
@@ -82,25 +101,37 @@ public class characterLocomotionRB : MonoBehaviour
 
         inputMovement = new Vector3(horizontal, 0, vertical).normalized;
 
-
-        forceSign = Input.GetAxisRaw("Fire1");
+        inputForce = Input.GetAxisRaw("Fire1");
+        if (Input.GetButtonUp("Fire1"))
+            inputForceReleased = true;
         
+        inputJump = Input.GetAxisRaw("Jump");
     }
     void HandleMovement()
     {
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        Debug.Log(nearTarget);
+        #region -------------    PHYSICAL CHECKS
+        isGrounded = Physics.Raycast(groundCheck.position + transform.up, -transform.up, 1 + groundDistance, groundMask);
+        isWall = Physics.Linecast(wallCheck.position-transform.forward*wallCheck.localPosition.z, wallCheck.position, groundMask);
+        isWallUp = Physics.Linecast(wallUpCheck.position - transform.forward * wallUpCheck.localPosition.z, wallUpCheck.position, groundMask);
 
-        isWall = Physics.CheckSphere(wallCheck.position, groundDistance, groundMask);
-        //------------------------------    MOVEMENT
-        if (isGrounded)
+        Debug.DrawRay(groundCheck.position + transform.up, -transform.up*(1 + groundDistance), Color.red);
+        Debug.DrawLine(wallCheck.position - transform.forward * wallCheck.localPosition.y, wallCheck.position, Color.red);
+        Debug.DrawLine(wallUpCheck.position - transform.forward * wallUpCheck.localPosition.y, wallUpCheck.position, Color.red);
+        #endregion
+        #region -------------   ON GROUND
+        if (state == State.OnGround)
         {
+            animator.SetBool("isFalling", false);
+            animator.SetBool("isHanging", false);
+            animator.SetBool("isGliding", false);
             // -------------    RUN WALK
             if (inputMovement.magnitude >= 0.1f)
             {
                 animator.SetBool("isWalking", true);
 
                 float targetAngle = cam.eulerAngles.y;
-                float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+                float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocityGrounded, turnSmoothTime);
                 transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
 
@@ -110,173 +141,322 @@ public class characterLocomotionRB : MonoBehaviour
                 animator.SetBool("isWalking", false);
                 inputMovement = new Vector3(0, 0, 0);
             }
+            
         }
-        // -------------    HANGING
-        else if (isHanging)
+        #endregion
+        #region -------------    ON WALL
+        else if (state == State.OnWall)
         {
+            animator.SetBool("isFalling", false);
+            animator.SetBool("isHanging", true);
+
             //  aligner le perso a la surface de collision
-            Vector3 targetDirection = -hitAiming.normal;
-            float targetAngle = Mathf.Atan2(targetDirection.x, targetDirection.z) * Mathf.Rad2Deg;
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
-
-            debug1.text = "input movement"+ inputMovement;
-            if (inputMovement.magnitude >= 0.1f)
+            RaycastHit hitCollider;
+            Vector3 originPosition = transform.position; //wallCheck.position - new Vector3(0,0,wallCheck.localPosition.z);
+            Vector3 ForwardNeutral = transform.forward;
+            ForwardNeutral.y = 0.0f;
+            ForwardNeutral.Normalize();
+            Debug.DrawLine(originPosition, originPosition + ForwardNeutral * 10, Color.yellow);
+            if (Physics.Raycast(originPosition - ForwardNeutral * 1.2f, ForwardNeutral, out hitCollider, 10f))
             {
-                animator.SetBool("isHanging", true);
+                Vector3 closestPoint = hitCollider.collider.ClosestPoint(originPosition);
 
 
+                Debug.DrawLine(originPosition, closestPoint, Color.red);
+                Vector3 direction = (closestPoint - transform.position);
+                direction = Quaternion.AngleAxis(0, Vector3.up) * direction;
+
+                transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+
+                Debug.Log("rotated climb");
             }
 
+
+            //rb.AddForce(transform.forward * 5f);
+            if(inputMovement.magnitude < 0.1f)
+            {
+                rb.velocity = Vector3.SmoothDamp(rb.velocity, Vector3.zero, ref animSmoothVelocity, animSmoothTime);
+            }
             bool isEdge = Physics.CheckSphere(wallUpCheck.position, groundDistance, groundMask);
             if (!isEdge)
             {
                 animator.SetTrigger("climbEdge");
-                isHanging = false;
                 animator.SetBool("isHanging", false);
             }
         }
-        // -------------    GRAVITY
-        if (forceSign == 0 && !isHanging )
+        #endregion
+        #region -------------    ON AIR
+        if (state == State.OnAir)
+        {
+            animator.SetBool("isFalling", true);
+            animator.SetBool("isHanging", false);
+        }
+        #endregion
+        #region -------------    ON JUMP
+        if (state == State.OnJump)
+        {
+            animator.SetBool("isFalling", false);
+        }
+        #endregion
+        #region -------------    ON SPECTRAL FORCE
+        if (state == State.OnAttractUse)
+        {
+            animator.SetBool("isFalling", false);
+            SpectralForce();
+        }
+        #endregion
+        #region  -------------    GRAVITY
+        bool useGravity;
+        switch (state)
+        {
+            case State.OnWall:      useGravity = false; break;
+            case State.OnJump:      useGravity = false; break;
+            case State.OnAttractUse:  useGravity = false; break;
+            default: useGravity = true; break;
+        }
+        if (useGravity)
             rb.AddForce(Vector3.up * gravity);
-
-        if(forceSign == 0) 
+        #endregion
+        #region -------------    ROOT MOTION
+        bool useRootMotion;
+        switch (state)
+        {
+            case State.OnAttractUse:  useRootMotion = false; break;
+            default:                useRootMotion = true; break;
+        }
+        if(useRootMotion) 
             animator.applyRootMotion = true;
-        else
-            animator.applyRootMotion = false;
-
-
+        #endregion
         // ----------------------       ANIMATION
         // ----------   Run / walk
         animMovement = Vector3.SmoothDamp(animMovement, inputMovement, ref animSmoothVelocity, animSmoothTime);
+
         animator.SetFloat("Side", animMovement.x);
         animator.SetFloat("FrontBack", animMovement.z);
 
-        // ---------    Resting
-        if (inputMovement.magnitude <= 0.1f && forceSign == 0) 
-            timeSinceInput += Time.deltaTime;
-        else 
-            timeSinceInput = 0;
+        #region -----------------------      STATES TRANSITION
+        if (state == State.OnGround)
+        {
 
-        if (timeSinceInput > timeBeforeRest) 
-            isResting = true;
-        else 
-            isResting = false;
+            // ---------    TO ON WALL = aggrip, si on est devant le mur et qu'on va vers le mur
+            if (isWall && inputMovement.z>0)
+                Grab();
+            // ---------    TO AIR = jump et fall
+            if(inputJump >0)
+                Jump();
+            else if (!isGrounded)
+                Fall();
+            // ---------    TO ATTRACT USE
+            if (inputForce != 0 && isAiming && inputForceReleased)
+                Attract();
+            // ---------    TO RESTING SUBSTATE
+            if (inputMovement.magnitude <= 0.1f && inputForce == 0)
+                timeSinceInput += Time.deltaTime;
+            else
+                timeSinceInput = 0;
+            bool isResting;
+            if (timeSinceInput > timeBeforeRest)
+                isResting = true;
+            else
+                isResting = false;
 
-        animator.SetBool("isResting", isResting);
-
-        // ---------    Hanging
-
-        if (!isGrounded && isWall)
-            isHanging = true;
-        else 
-            isHanging = false;
-        animator.SetBool("isHanging", isHanging);
-
-        // ---------- Falling
-        if (!isGrounded && !isHanging) 
-            animator.SetBool("isFalling", true);
-        else
-            animator.SetBool("isFalling", false);
+            animator.SetBool("isResting", isResting);
+        }
+        else if(state == State.OnWall)
+        {
+            // -------- TO JUMP
+            if (inputJump > 0)
+                Jump();
+            // -------- TO AIR
+            if (!isWall)
+                Fall();
+            // -------- TO GROUND : descente et climb edge
+            if (isGrounded)
+                Ground();
+            // -------- TO ATTRACT USE
+            if (inputForce != 0 && isAiming && inputForceReleased)
+                Attract();
+        }
+        else if(state == State.OnAir)
+        {
+            // ---- TO GROUND
+            if (isGrounded)
+                Ground();
+            // ---- TO WALL
+            else if (isWall && inputMovement.z > 0)
+                Grab();
+            // ---- TO ATTRACT
+            if (inputForce != 0 && isAiming && inputForceReleased)
+                Attract();
+        }
+        else if(state == State.OnJump)
+        {
+            // -------  TO AIR AUTO
+            // -------- TO GROUND
+            if (isGrounded)
+                Ground();
+            // -------- TO WALL
+            else if (isWall && inputMovement.z > 0)
+                Grab();
+            // ----     TO ATTRACT
+            if (inputForce != 0 && isAiming && inputForceReleased)
+                Attract();
+        }
+        else if (state == State.OnAttractUse)
+        {
+            // -------- TO WALL
+            if (nearTarget && isWall)
+            {
+                Debug.Log("go to wall");
+                Grab();
+            }
+            // -------- TO AIR & GROUND
+            if (inputForce == 0) {
+                if (isGrounded)
+                {
+                    Fall();
+                }
+                else
+                    Ground();
+            }
+        }
+        #endregion
 
 
     }
+    #region -------------   STATE TRANSITIONS FUNCTIONS
+    private void Grab()
+    {
+        state = State.OnWall;
+        if (isGrounded)
+            StartCoroutine(GrabMove());
+    }
+    private IEnumerator GrabMove()
+    {
+        //TRANSITE SUR DU ON WALL, pousse le joueur vers le haut tant que is grounded est true
+        rb.MovePosition(transform.position + transform.up * 0.1f);
+        yield return new WaitWhile(() => isGrounded);
+        rb.velocity = new Vector3(0, 0, 0);
+    }
+    private void Jump()
+    {
+        //TRANSITE SUR DU JUMP, lance l'anim
+        animator.SetTrigger("Jump");
+        state = State.OnJump;
+        StartCoroutine(JumpEnd());
+    }
+    private IEnumerator JumpEnd()
+    {
+        yield return new WaitForSeconds(jumpAnimDuration);
+        if (state == State.OnJump)
+            state = State.OnAir;
+    }
+    private void Fall()
+    {
+        //TRANSITE SUR DU OnAir
+        state = State.OnAir;
+        animator.SetBool("isFalling", true);
+    }
+    private void Ground()
+    {
+        //TRANSITE SUR DU ground
+        state = State.OnGround;
+
+    }
+    private void Attract()
+    {
+        activeHitAiming = hitAiming;
+        inputForceReleased = false;
+        state = State.OnAttractUse;
+        rb.velocity = Vector3.zero; //reset la velocité quand on active la force;
+    }
+    #endregion
     void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(groundCheck.position, groundDistance);
         Gizmos.DrawSphere(wallCheck.position, groundDistance);
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(wallUpCheck.position, groundDistance);
 
     }
     void Aim()
     {
-        if (forceSign == 0)
+        var ray = Camera.main.ScreenPointToRay(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f));
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, maxDistance, groundMask))
         {
-            var ray = Camera.main.ScreenPointToRay(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f));
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, maxDistance, groundMask))
-            {
-                aimSphere.transform.position = hit.point;
-                isAiming = true;
-                hitAiming = hit;
-            }
-            else
-            {
-                isAiming = false;
-            }
-
-            //ANIM RESET
-            animator.SetBool("isGliding", false);
-            animator.SetBool("isArmForce", false);
-            animator.SetFloat("forceSign", 0.5f);
+            aimSphere.transform.position = hit.point;
+            isAiming = true;
+            hitAiming = hit;
         }
-        else if (isAiming)
+        else
         {
-            SpectralForce();
-
-            // ROTATE TOWARD AIM
-            Vector3 targetDirection = hitAiming.point - transform.position;
-            float targetAngle = Mathf.Atan2(targetDirection.x, targetDirection.z) * Mathf.Rad2Deg;
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            isAiming = false;
         }
-
-        if (Input.GetButtonDown("Fire1") && isAiming) rb.velocity = Vector3.zero; //reset la velocité quand on active la force;
+        if (state == State.OnAttractUse) {
+            attractedObject.SetActive(true);
+            attractedObject.transform.position = activeHitAiming.point;
+        }
+        else
+            attractedObject.SetActive(false);
     }
     void SpectralForce()
     {
+        // ROTATE TOWARD AIM
+        Vector3 targetDirection = activeHitAiming.point - transform.position;
+        float targetAngle = Mathf.Atan2(targetDirection.x, targetDirection.z) * Mathf.Rad2Deg;
+        float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocityGrounded, turnSmoothTime);
+        transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
         //  ----------  CROSS AIM ADJUSTEMENT
         aimOffsetX = Mathf.SmoothDamp(aimOffsetX, inputMovement.x, ref aimOffsetVelocityX, animSmoothTime);
         aimOffsetY = Mathf.SmoothDamp(aimOffsetY, inputMovement.z, ref aimOffsetVelocityY, animSmoothTime);
 
         Vector3 characterCenter = transform.position + rb.centerOfMass;
-        Vector3 aimCenter = hitAiming.point;
+        Vector3 aimCenter = activeHitAiming.point;
         Vector3 aimDir = (aimCenter - characterCenter).normalized;
 
-        float distanceToTarget = (hitAiming.point - (transform.position + rb.centerOfMass)).magnitude;
+        float distanceToTarget = (activeHitAiming.point - (transform.position + rb.centerOfMass)).magnitude;
 
         aimDir = Quaternion.AngleAxis(aimOffsetMaxDegree*aimOffsetX, Vector3.up) * aimDir;
         aimDir = Quaternion.AngleAxis(aimOffsetMaxDegree * -aimOffsetY, Vector3.left) * aimDir;
 
 
-        float distanceThresh = 0.5f;
+        
         float forceOnChara = 0f;
         float forceOnCollider = 0f;
 
         float angleY = Vector3.Angle(aimDir, new Vector3(aimDir.x, 0, aimDir.z));
         if (angleY < 10) aimCenter = new Vector3(aimDir.x, 0, aimDir.z);
 
+        Rigidbody colliderRb = activeHitAiming.transform.gameObject.GetComponent<Rigidbody>();
 
-        if (distanceToTarget < distanceThresh) Debug.Log("STOP");
-        Rigidbody colliderRb = hitAiming.transform.gameObject.GetComponent<Rigidbody>();
 
-       
-
+        nearTarget = distanceToTarget < distanceNearTarget;
         //  ----------  IMMOBILE OBJECT
-        if (hitAiming.transform.gameObject.GetComponent<Rigidbody>() == null) {
-            if (forceSign != 0)
+        if (activeHitAiming.transform.gameObject.GetComponent<Rigidbody>() == null) {
+            forceOnChara = forcePower * inputForce;
+            forceOnCollider = 0;
+            if (!nearTarget)
             {
-                forceOnChara = forcePower * forceSign;
-                forceOnCollider = 0;
-                if (distanceToTarget > distanceThresh)
-                {
-                    rb.AddForce(aimDir * forceOnChara);
-                }
-                Debug.DrawLine(transform.position, transform.position + aimDir * forceOnChara, Color.yellow);
+                rb.AddForce(aimDir * forceOnChara);
             }
+            Debug.DrawLine(transform.position, transform.position + aimDir * forceOnChara, Color.yellow);
+            
         }
         //     -----------   MOBILE OBJECT
         else {
 
             float colliderMass = colliderRb.mass;
-            forceOnCollider = forcePower * forceSign;
-            forceOnChara = Mathf.Min(forcePower, colliderMass) * forceSign;
+            forceOnCollider = forcePower * inputForce;
+            forceOnChara = Mathf.Min(forcePower, colliderMass) * inputForce;
             colliderRb.AddForce(aimDir * -forceOnCollider);
 
-            Debug.DrawLine(hitAiming.point, transform.position + rb.centerOfMass);
-            Debug.DrawRay(transform.position + rb.centerOfMass, hitAiming.point - (transform.position + rb.centerOfMass));
+            Debug.DrawLine(activeHitAiming.point, transform.position + rb.centerOfMass);
+            Debug.DrawRay(transform.position + rb.centerOfMass, activeHitAiming.point - (transform.position + rb.centerOfMass));
 
-            if (distanceToTarget > distanceThresh)
+            if (!nearTarget)
             {
                 rb.AddForce(aimDir * forceOnChara);
             }
@@ -293,7 +473,7 @@ public class characterLocomotionRB : MonoBehaviour
             {
 
                 animator.SetBool("isGliding", true);
-                animator.SetFloat("forceSign", forceSign * 0.5f + 0.5f);
+                animator.SetFloat("forceSign", inputForce * 0.5f + 0.5f);
 
                 animator.SetBool("isArmForce", false);
             }
@@ -301,7 +481,7 @@ public class characterLocomotionRB : MonoBehaviour
             else if (Mathf.Abs(forceOnChara) < Mathf.Abs(forceOnCollider))
             {
                 animator.SetBool("isArmForce", true);
-                animator.SetFloat("forceSign", forceSign*0.5f+0.5f);
+                animator.SetFloat("forceSign", inputForce*0.5f+0.5f);
 
                 animator.SetBool("isGliding", false);
             }
@@ -350,6 +530,7 @@ public class characterLocomotionRB : MonoBehaviour
 
         }
         */
+        
     }
     
         
